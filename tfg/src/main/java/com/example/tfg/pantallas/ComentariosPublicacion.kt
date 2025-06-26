@@ -2,7 +2,7 @@ package com.example.tfg.pantallas
 
 import android.content.Context
 import android.util.Log
-import androidx.compose.foundation.lazy.items // Esta es la que probablemente buscas para items(List<T>, key, itemContent)
+import androidx.compose.foundation.lazy.items
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -53,7 +53,6 @@ fun ComentariosPublicacion(
 
     Column(modifier = Modifier.padding(16.dp)) {
 
-        // Campo de escritura de comentario
         ConstraintLayout(
             modifier = Modifier
                 .fillMaxWidth()
@@ -93,7 +92,6 @@ fun ComentariosPublicacion(
 
         Spacer(modifier = Modifier.padding(top = 12.dp))
 
-        // Lista de comentarios
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxWidth()

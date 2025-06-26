@@ -56,7 +56,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation("androidx.constraintlayout:constraintlayout:2.2.0-beta01")
 
-    // To use constraintlayout in compose
+    // constraint layout
     implementation("androidx.constraintlayout:constraintlayout-compose:1.1.0-beta01")
     implementation(libs.androidx.material3)
     testImplementation(libs.junit)

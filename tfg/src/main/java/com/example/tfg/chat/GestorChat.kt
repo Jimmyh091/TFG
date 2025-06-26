@@ -139,14 +139,13 @@ fun enviarMensaje(
                 if (emisorExistente == receptorId) haEscritoElOtro = true
             }
 
-            // Enviar notificación si es la primera vez que este emisor habla en este chat
+            // Enviar notificación si primera vez que habla en e chat
             if (!haEscritoElEmisor) {
                 onEnviarNotificacion(receptorId)
             } else if (!haEscritoElOtro) {
                 onEnviarNotificacion(emisorId) // responder por primera vez
             }
 
-            // Guardar el mensaje en Firebase
             chatRef.child(mensajeId).setValue(mensaje)
         }
 
@@ -176,7 +175,6 @@ fun enviarMensajeConNotificacionSiEsPrimero(
 
             if (esPrimeraVez) {
                 onPrimeraVez()
-                // Aquí podrías lanzar una notificación local, o usar Firebase Cloud Messaging (FCM)
             }
         }
 

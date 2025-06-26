@@ -33,7 +33,7 @@ fun EditarSubastaScreen(
     var titulo by remember{ mutableStateOf("") }
     var desc by remember{ mutableStateOf("") }
     var precio by remember{ mutableStateOf("") }
-    var fechaLimite by remember{ mutableStateOf("") } // como “2025-07-01T12:00”
+    var fechaLimite by remember{ mutableStateOf("") }
 /*
     LaunchedEffect(subastaId){
         subastaId?.let{ id ->

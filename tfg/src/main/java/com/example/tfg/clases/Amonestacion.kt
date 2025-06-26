@@ -6,6 +6,6 @@ data class Amonestacion(
     val autorId: String = "",
     val denuncianteId: String = "",
     val motivo: String = "",
-    val estado: String = "pendiente", // "pendiente", "aprobada", "rechazada"
+    val estado: String = "pendiente",
     val fecha: Long = System.currentTimeMillis()
 )

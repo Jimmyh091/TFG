@@ -436,7 +436,7 @@ class Util {
                         snapshot.children.forEach {
                             val am = it.getValue(Amonestacion::class.java)
                             if (am != null) {
-                                am.id = it.key  // <<<<<< NECESARIO PARA ELIMINARLA DESPUÉS
+                                am.id = it.key
                                 lista.add(am)
                             }
                         }

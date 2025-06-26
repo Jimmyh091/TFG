@@ -53,7 +53,6 @@ fun ResultadoSubastaScreen(
                     val ordenadas = pujas.sortedByDescending { it.cantidad }
                     pujasOrdenadas = ordenadas
 
-                    // Obtener los nombres de los pujadores
                     val idsUnicos = ordenadas.map { it.pujadorId }.distinct()
                     val mapaTemp = mutableMapOf<String, String>()
 
@@ -85,7 +84,7 @@ fun ResultadoSubastaScreen(
     val esGanador = subasta?.idGanador == usuarioId
     val subastaTerminada = subasta?.fechaLimite?.let { it < System.currentTimeMillis() } == true
 
-    // Añadir al carrito si es el ganador
+    // Añadir al carrito si ganador
     LaunchedEffect(esGanador, obra?.id_firebase) {
         if (!esAutor && esGanador == true && obra != null) {
             Log.d("CarritoManager", "Obra ganadora añadida al carrito: ${obra!!.id_firebase}")

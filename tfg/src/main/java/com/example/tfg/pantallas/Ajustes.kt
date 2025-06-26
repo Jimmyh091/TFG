@@ -34,7 +34,6 @@ fun AjustesPantalla(nav: NavHostController? = null) {
             .fillMaxSize()
             .padding(24.dp)
     ) {
-        // Imagen y nombre
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(bottom = 16.dp)
@@ -58,7 +57,6 @@ fun AjustesPantalla(nav: NavHostController? = null) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Opciones de ajustes
         AjusteItem("Editar perfil", Icons.Default.Edit) {
             nav?.navigate("editarPerfil")
         }
@@ -77,11 +75,10 @@ fun AjustesPantalla(nav: NavHostController? = null) {
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Cerrar sesión
         Button(
             onClick = {
                 Util.cerrarSesion(contexto)
-                nav?.navigate("login") // Redirige al login
+                nav?.navigate("login")
             },
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.error,

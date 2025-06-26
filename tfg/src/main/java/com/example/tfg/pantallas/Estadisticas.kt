@@ -81,9 +81,9 @@ fun BarChartView(ventas: Int, compras: Int, favoritos: Int) {
 
             val dataSet = BarDataSet(entries, "Estadísticas").apply {
                 colors = listOf(
-                    Color.rgb(244, 67, 54),   // Rojo
-                    Color.rgb(33, 150, 243),  // Azul
-                    Color.rgb(76, 175, 80)    // Verde
+                    Color.rgb(244, 67, 54),
+                    Color.rgb(33, 150, 243),
+                    Color.rgb(76, 175, 80)
                 )
                 valueTextColor = if (isDarkTheme) Color.WHITE else Color.BLACK
                 valueTextSize = 14f

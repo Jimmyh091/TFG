@@ -48,7 +48,7 @@ fun ModificarObraScreen(
     var descripcion by remember { mutableStateOf("") }
     var selectedGenre by remember { mutableStateOf("") }
 
-    val selectedImageUri = remember { mutableStateOf<Uri?>(null) } // imagen no editable aún
+    val selectedImageUri = remember { mutableStateOf<Uri?>(null) }
     val expanded = remember { mutableStateOf(false) }
 
     LaunchedEffect(true) {
@@ -60,7 +60,7 @@ fun ModificarObraScreen(
                 descripcion = obraCargada.descripcion!!
                 selectedGenre = obraCargada.genero!!
 
-                // Buscar subasta asociada (si existe)
+                // Buscar subasta asociada si existe
                 dbRef.child("subastas").orderByChild("obraId").equalTo(obraId)
                     .get().addOnSuccessListener { subSnap ->
                         subSnap.children.firstOrNull()?.getValue(Subasta::class.java)?.let {
@@ -99,7 +99,7 @@ fun ModificarObraScreen(
                         Switch(
                             checked = crearSubasta,
                             onCheckedChange = { crearSubasta = it },
-                            enabled = subasta == null // solo se puede activar si no había subasta antes
+                            enabled = subasta == null
                         )
                     }
                 }

@@ -75,7 +75,7 @@ fun TfgTheme(
 
     MaterialTheme(
         colorScheme = colors,
-        typography = Typography(), // puedes personalizarlo luego
+        typography = Typography(),
         content = content
     )
 }

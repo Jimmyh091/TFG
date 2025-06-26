@@ -34,7 +34,6 @@ fun Buscador(nav: NavHostController) {
     var filtroUsuario by remember { mutableStateOf("") }
     var mostrarVendidos by remember { mutableStateOf(false) }
 
-    // Load obras
     LaunchedEffect(Unit) {
         dbRef.child("arte").child("obras")
             .addValueEventListener(object : ValueEventListener {
@@ -48,7 +47,6 @@ fun Buscador(nav: NavHostController) {
             })
     }
 
-    // Load subastas
     LaunchedEffect(Unit) {
         dbRef.child("arte").child("subastas")
             .addValueEventListener(object : ValueEventListener {
@@ -62,7 +60,6 @@ fun Buscador(nav: NavHostController) {
             })
     }
 
-    // Map authors
     val mapaUsuarios = remember { mutableStateMapOf<String, String>() }
     LaunchedEffect(Unit) {
         Util.obtenerUsuarios(dbRef) { usuarios ->

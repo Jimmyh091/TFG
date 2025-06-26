@@ -345,7 +345,6 @@ fun PublicacionInfosItem(
                     shape = RoundedCornerShape(20.dp),
                     modifier = Modifier.padding(10.dp)
                 ) {
-                    // Ensure obraSeleccionada.id_firebase is not null before passing
                     obra.id_firebase?.let {
                         PublicacionInfoItem(nav, it)
                     }

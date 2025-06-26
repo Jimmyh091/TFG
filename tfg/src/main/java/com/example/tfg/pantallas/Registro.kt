@@ -160,7 +160,6 @@ fun validarRegistro(
             return@obtenerUsuarios
         }
 
-        // ✅ Todo correcto
         callback(true)
     }
 }

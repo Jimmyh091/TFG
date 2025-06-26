@@ -180,7 +180,7 @@ fun PantallaPago(
                     obra = obra,
                     onCompraExitosa = {
                         Util.editarUsuario(db_ref, contexto, usuario)
-                        Util.escribirObra(db_ref, obra) // Por si quieres actualizar la obra también
+                        Util.escribirObra(db_ref, obra)
                         compraRealizada = true
                     },
                     onFaltaDinero = { faltante ->

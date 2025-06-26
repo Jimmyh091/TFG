@@ -61,7 +61,7 @@ fun PublicacionItem(
             contentDescription = null,
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 150.dp), // 👈 esto arregla el problema visual,
+                .heightIn(min = 150.dp),
             contentScale = ContentScale.Crop
         )
 
