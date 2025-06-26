@@ -140,6 +140,10 @@ fun validarRegistro(
             Toast.makeText(contexto, "El correo ya está en uso", Toast.LENGTH_SHORT).show()
             callback(false)
             return@obtenerUsuarios
+        }else if (!correo.contains("@")) {
+            Toast.makeText(contexto, "El correo no es válido", Toast.LENGTH_SHORT).show()
+            callback(false)
+            return@obtenerUsuarios
         }
 
         val tieneMayus = contrasena.any { it.isUpperCase() }
