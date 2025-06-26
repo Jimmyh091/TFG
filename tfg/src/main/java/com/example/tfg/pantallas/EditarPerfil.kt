@@ -53,7 +53,7 @@ fun EditarPerfilScreen(nav: NavHostController? = null) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Image(
-            painter = painterResource(id = R.drawable.perfil),
+            painter = painterResource(id = R.drawable.usuario),
             contentDescription = "Foto de perfil",
             modifier = Modifier.size(100.dp)
         )

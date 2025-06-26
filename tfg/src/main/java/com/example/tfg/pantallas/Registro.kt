@@ -3,25 +3,9 @@ package com.example.tfg.pantallas
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -44,8 +28,8 @@ fun Registro(
     var correo by remember { mutableStateOf("") }
     var contrasena by remember { mutableStateOf("") }
 
-    var db_ref = FirebaseDatabase.getInstance().reference
-    var contexto = LocalContext.current
+    val db_ref = FirebaseDatabase.getInstance().reference
+    val contexto = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -83,40 +67,43 @@ fun Registro(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
 
-            OutlinedButton(colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF3479BF),
-                contentColor = Color.White          
-            ),onClick = { nav?.navigate("login") }) {
+            OutlinedButton(
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF3479BF),
+                    contentColor = Color.White
+                ),
+                onClick = { nav?.navigate("login") }
+            ) {
                 Text("Volver")
             }
 
-            Button(colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF3479BF),
-                contentColor = Color.White          
-            ),
-                modifier = Modifier
-                    .width(200.dp),
+            Button(
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF3479BF),
+                    contentColor = Color.White
+                ),
+                modifier = Modifier.width(200.dp),
                 onClick = {
+                    validarRegistro(db_ref, contexto, usuario, correo, contrasena) { esValido ->
+                        if (esValido) {
+                            val id_firebase = db_ref.child("usuarios").push().key!!
 
-                    if (validarRegistro(db_ref, contexto, usuario, correo, contrasena)) {
+                            val u = Usuario(
+                                id_firebase = id_firebase,
+                                admin = false,
+                                nombre = usuario,
+                                correo = correo,
+                                contrasenia = contrasena,
+                            )
 
-                        val id_firebase = db_ref.child("usuarios").push().key
+                            Util.aniadirUsuario(db_ref, u)
+                            Util.actualizarShared(contexto, u)
+                            Toast.makeText(contexto, "Registro correcto", Toast.LENGTH_SHORT).show()
+                            nav?.navigate("principal")
+                        }
 
-                        val u = Usuario(
-                            id_firebase = id_firebase!!,
-                            admin = false,
-                            nombre = usuario,
-                            correo = correo,
-                            contrasenia = contrasena,
-                        )
-
-                        Util.aniadirUsuario(db_ref, u)
-                        Util.actualizarShared(contexto, u)
-                        Toast.makeText(contexto, "Registro correcto", Toast.LENGTH_SHORT).show()
-                        nav?.navigate("principal")
+                        onRegistrar(usuario, correo, contrasena)
                     }
-
-                    onRegistrar(usuario, correo, contrasena)
                 }
             ) {
                 Text("Registrarse")
@@ -127,47 +114,49 @@ fun Registro(
     }
 }
 
-fun validarRegistro(db_ref: DatabaseReference, contexto: Context, usuario: String, correo: String, contrasena: String) : Boolean{
-
-    var registroValido = true
-
+fun validarRegistro(
+    db_ref: DatabaseReference,
+    contexto: Context,
+    usuario: String,
+    correo: String,
+    contrasena: String,
+    callback: (Boolean) -> Unit
+) {
     Util.obtenerUsuarios(db_ref) { usuarios ->
-        if (usuario.isEmpty() || correo.isEmpty() || contrasena.isEmpty()){
+
+        if (usuario.isBlank() || correo.isBlank() || contrasena.isBlank()) {
             Toast.makeText(contexto, "Rellene todos los campos", Toast.LENGTH_SHORT).show()
-            registroValido = false
-
-        } else {
-            for (u in usuarios) {
-                if (u.nombre == usuario) {
-                    Toast.makeText(contexto, "El usuario ya existe", Toast.LENGTH_SHORT)
-                        .show()
-                    registroValido = false
-                }
-
-                if (u.correo == correo) {
-                    Toast.makeText(contexto, "El correo ya existe", Toast.LENGTH_SHORT)
-                        .show()
-                    registroValido = false
-                }
-            }
-
-            Log.d("Registro", "Usuario: $usuario, Correo: $correo, Contraseña: $contrasena")
-
-            Log.d("Registro", "Longitud: ${contrasena.length}, Mayúsculas: ${contrasena.any { it.isUpperCase() }}, Números: ${contrasena.any { it.isDigit() }}")
-
-            var conLenght = contrasena.length < 6
-            var mayus = !contrasena.any { it.isUpperCase() }
-            var num = !contrasena.any { it.isDigit() }
-
-            Log.d("Registro", "Longitud: $conLenght, Mayúsculas: $mayus, Números: $num")
-
-            if (contrasena.length < 6 || !contrasena.any { it.isDigit() } || !contrasena.any { it.isUpperCase() }) {
-                Toast.makeText(contexto, "La contraseña debe tener al menos 6 caracteres, una mayúscula y un número", Toast.LENGTH_LONG).show()
-                registroValido = false
-            }
+            callback(false)
+            return@obtenerUsuarios
         }
 
-    }
+        if (usuarios.any { it.nombre == usuario }) {
+            Toast.makeText(contexto, "El nombre de usuario ya está en uso", Toast.LENGTH_SHORT).show()
+            callback(false)
+            return@obtenerUsuarios
+        }
 
-    return registroValido
+        if (usuarios.any { it.correo == correo }) {
+            Toast.makeText(contexto, "El correo ya está en uso", Toast.LENGTH_SHORT).show()
+            callback(false)
+            return@obtenerUsuarios
+        }
+
+        val tieneMayus = contrasena.any { it.isUpperCase() }
+        val tieneNumero = contrasena.any { it.isDigit() }
+        val esLarga = contrasena.length >= 6
+
+        if (!tieneMayus || !tieneNumero || !esLarga) {
+            Toast.makeText(
+                contexto,
+                "La contraseña debe tener al menos 6 caracteres, una mayúscula y un número",
+                Toast.LENGTH_LONG
+            ).show()
+            callback(false)
+            return@obtenerUsuarios
+        }
+
+        // ✅ Todo correcto
+        callback(true)
+    }
 }

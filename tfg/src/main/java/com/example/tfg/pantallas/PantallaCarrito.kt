@@ -15,15 +15,16 @@ import androidx.navigation.NavHostController
 import com.example.tfg.clases.CarritoManager
 import com.example.tfg.crudObra.Obra
 import com.example.tfg.Util
+import com.example.tfg.subastas.Subasta
 import com.google.firebase.database.FirebaseDatabase
 
 @Composable
 fun CarritoScreen(nav: NavHostController) {
     val contexto = LocalContext.current
     val dbRef = FirebaseDatabase.getInstance().reference
-    val listaObras = remember { mutableStateListOf<Pair<Obra, String>>() }
+    val listaObras = remember { mutableStateListOf<Triple<Obra, String, Boolean>>() } // (obra, autor, esGanada)
+    val usuarioId = Util.obtenerDatoShared(contexto, "id") ?: return
 
-    // Recarga las obras cada vez que el carrito cambia
     LaunchedEffect(CarritoManager.obrasEnCarrito) {
         listaObras.clear()
         CarritoManager.obrasEnCarrito.forEach { id ->
@@ -31,9 +32,22 @@ fun CarritoScreen(nav: NavHostController) {
                 obra?.let {
                     Util.obtenerUsuario(dbRef, it.autor ?: "") { usuario ->
                         val nombreAutor = usuario?.nombre ?: "Desconocido"
-                        if (!listaObras.any { par -> par.first.id_firebase == obra.id_firebase }) {
-                            listaObras.add(obra to nombreAutor)
-                        }
+                        // Verificar si ha sido ganada en subasta por este usuario
+                        dbRef.child("subastas").orderByChild("idObra_firebase").equalTo(it.id_firebase)
+                            .get().addOnSuccessListener { snapshot ->
+                                var esGanada = false
+                                for (subSnap in snapshot.children) {
+                                    val subasta = subSnap.getValue(Subasta::class.java)
+                                    if (subasta?.idGanador == usuarioId) {
+                                        esGanada = true
+                                        break
+                                    }
+                                }
+                                // Evitar duplicados
+                                if (!listaObras.any { par -> par.first.id_firebase == obra.id_firebase }) {
+                                    listaObras.add(Triple(obra, nombreAutor, esGanada))
+                                }
+                            }
                     }
                 }
             }
@@ -58,7 +72,7 @@ fun CarritoScreen(nav: NavHostController) {
             }
         } else {
             LazyColumn(modifier = Modifier.weight(1f)) {
-                items(listaObras) { (obra, nombreAutor) ->
+                items(listaObras) { (obra, nombreAutor, esGanada) ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -74,20 +88,29 @@ fun CarritoScreen(nav: NavHostController) {
                             Text("Autor: $nombreAutor", fontSize = 14.sp)
                             Text("Precio: ${obra.precio}€", fontSize = 14.sp)
 
-                            Button(
-                                onClick = {
-                                    CarritoManager.borrar(obra.id_firebase!!)
-                                    listaObras.removeIf { it.first.id_firebase == obra.id_firebase }
-                                },
-                                modifier = Modifier
-                                    .padding(top = 8.dp)
-                                    .align(Alignment.End),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.error,
-                                    contentColor = MaterialTheme.colorScheme.onError
+                            if (esGanada) {
+                                Text(
+                                    "Obra ganada en subasta",
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontSize = 13.sp,
+                                    modifier = Modifier.padding(top = 6.dp)
                                 )
-                            ) {
-                                Text("Eliminar")
+                            } else {
+                                Button(
+                                    onClick = {
+                                        CarritoManager.borrar(obra.id_firebase!!)
+                                        listaObras.removeIf { it.first.id_firebase == obra.id_firebase }
+                                    },
+                                    modifier = Modifier
+                                        .padding(top = 8.dp)
+                                        .align(Alignment.End),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.error,
+                                        contentColor = MaterialTheme.colorScheme.onError
+                                    )
+                                ) {
+                                    Text("Eliminar")
+                                }
                             }
                         }
                     }

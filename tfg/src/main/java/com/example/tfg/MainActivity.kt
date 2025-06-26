@@ -244,17 +244,17 @@ fun BottomNavigationBar(navController: NavController, usuarioId: String?) {
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
 
     val items = listOf(
-        BottomNavItem("principal", R.drawable.home, "principal"),
-        BottomNavItem("buscador", R.drawable.lupa, "buscador"),
+        BottomNavItem("principal", R.drawable.principal, "principal"),
+        BottomNavItem("buscador", R.drawable.buscar, "buscador"),
         BottomNavItem("publicar", R.drawable.publicar, "crearObra"),
-        BottomNavItem("chat", R.drawable.comentarios, "gestorChat"),
-        BottomNavItem("perfil", R.drawable.perfil, "perfil/${usuarioId ?: ""}")
+        BottomNavItem("chat", R.drawable.chat, "gestorChat"),
+        BottomNavItem("perfil", R.drawable.usuario, "perfil/${usuarioId ?: ""}")
     )
 
-    NavigationBar {
+    NavigationBar (modifier = Modifier.height(70.dp)) {
         items.forEach { item ->
             NavigationBarItem(
-                modifier = Modifier.height(40.dp),
+                modifier = Modifier.height(30.dp),
                 icon = {
                     Icon(
                         painterResource(id = item.icon),

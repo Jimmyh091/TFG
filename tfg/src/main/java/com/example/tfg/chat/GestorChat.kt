@@ -84,7 +84,7 @@ fun GestorChat(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Image(
-                                painter = painterResource(id = R.drawable.perfil),
+                                painter = painterResource(id = R.drawable.usuario),
                                 contentDescription = "Perfil",
                                 modifier = Modifier.size(48.dp)
                             )

@@ -45,7 +45,7 @@ fun EstadisticasScreen(navController: NavHostController? = null, usuarioId: Stri
             verticalArrangement = Arrangement.Top
         ) {
             Text(
-                text = "Estadísticas del usuario",
+                text = "Tus estadísticas",
                 style = MaterialTheme.typography.titleLarge
             )
 
@@ -80,32 +80,61 @@ fun BarChartView(ventas: Int, compras: Int, favoritos: Int) {
             )
 
             val dataSet = BarDataSet(entries, "Estadísticas").apply {
-                colors = ColorTemplate.MATERIAL_COLORS.toList()
+                colors = listOf(
+                    Color.rgb(244, 67, 54),   // Rojo
+                    Color.rgb(33, 150, 243),  // Azul
+                    Color.rgb(76, 175, 80)    // Verde
+                )
                 valueTextColor = if (isDarkTheme) Color.WHITE else Color.BLACK
-                valueTextSize = 16f
+                valueTextSize = 14f
             }
 
             val barData = BarData(dataSet)
             barData.setValueFormatter(object : ValueFormatter() {
-                override fun getFormattedValue(value: Float): String {
-                    return value.toInt().toString()
-                }
+                override fun getFormattedValue(value: Float): String = value.toInt().toString()
             })
 
             this.data = barData
 
-            val description = Description()
-            description.text = "Comparación"
-            this.description = description
+            xAxis.apply {
+                setDrawGridLines(false)
+                granularity = 1f
+                setLabelCount(3)
+                valueFormatter = object : ValueFormatter() {
+                    override fun getFormattedValue(value: Float): String {
+                        return when (value.toInt()) {
+                            0 -> "Ventas"
+                            1 -> "Compras"
+                            2 -> "Favoritos"
+                            else -> ""
+                        }
+                    }
+                }
+                textColor = if (isDarkTheme) Color.WHITE else Color.BLACK
+                textSize = 12f
+                position = com.github.mikephil.charting.components.XAxis.XAxisPosition.BOTTOM
+            }
 
-            this.setDrawGridBackground(false)
-            this.setDrawBorders(false)
-            this.setFitBars(true)
-            this.setDrawValueAboveBar(true)
-            this.animateY(1000)
-            this.invalidate()
+            axisLeft.apply {
+                setDrawGridLines(false)
+                axisMinimum = 0f
+                textColor = if (isDarkTheme) Color.WHITE else Color.BLACK
+            }
+
+            axisRight.isEnabled = false
+            legend.isEnabled = false
+
+            description = Description().apply { text = "" }
+
+            setDrawBorders(false)
+            setDrawGridBackground(false)
+            setDrawValueAboveBar(true)
+            setFitBars(true)
+            animateY(800)
+            invalidate()
         }
     }, modifier = Modifier
         .fillMaxWidth()
         .height(300.dp))
 }
+

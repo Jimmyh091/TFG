@@ -63,6 +63,7 @@ fun DetalleSubastaScreen(
 
         val s = subasta!!
         val o = obra!!
+        val esAutor = o.autor == usuarioId
 
         // Obra destacada
         Card(
@@ -79,40 +80,49 @@ fun DetalleSubastaScreen(
 
         Spacer(Modifier.height(20.dp))
 
-        Text("Introduce tu puja", style = MaterialTheme.typography.titleMedium)
+        if (!esAutor) {
+            Text("Introduce tu puja", style = MaterialTheme.typography.titleMedium)
 
-        OutlinedTextField(
-            value = nuevaPuja,
-            onValueChange = { nuevaPuja = it },
-            label = { Text("Tu puja (€)") },
-            modifier = Modifier.fillMaxWidth()
-        )
+            OutlinedTextField(
+                value = nuevaPuja,
+                onValueChange = { nuevaPuja = it },
+                label = { Text("Tu puja (€)") },
+                modifier = Modifier.fillMaxWidth()
+            )
 
-        Button(
-            onClick = {
-                val cantidad = nuevaPuja.toFloatOrNull()
-                if (cantidad == null || cantidad <= 0f) return@Button
+            Button(
+                onClick = {
+                    val cantidad = nuevaPuja.toFloatOrNull()
+                    if (cantidad == null || cantidad <= 0f) return@Button
 
-                Util.hacerPuja(
-                    dbRef,
-                    Puja(
-                        subastaId = s.idSubasta_firebase ?: "",
-                        pujadorId = usuarioId,
-                        cantidad = cantidad
-                    )
-                ) {
-                    nuevaPuja = ""
-                    Util.obtenerPujas(dbRef, subastaId) { pujas = it }
-                }
-            },
-            modifier = Modifier
-                .padding(top = 12.dp)
-                .fillMaxWidth()
-        ) {
-            Text("Pujar")
+                    Util.hacerPuja(
+                        dbRef,
+                        Puja(
+                            subastaId = s.idSubasta_firebase ?: "",
+                            pujadorId = usuarioId,
+                            cantidad = cantidad
+                        )
+                    ) {
+                        nuevaPuja = ""
+                        Util.obtenerPujas(dbRef, subastaId) { pujas = it }
+                    }
+                },
+                modifier = Modifier
+                    .padding(top = 12.dp)
+                    .fillMaxWidth()
+            ) {
+                Text("Pujar")
+            }
+
+            Spacer(Modifier.height(24.dp))
+        } else {
+            Text(
+                "Eres el autor de esta subasta. No puedes pujar.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(vertical = 16.dp)
+            )
         }
-
-        Spacer(Modifier.height(24.dp))
 
         Divider()
         Text("Historial de pujas", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 12.dp, bottom = 8.dp))

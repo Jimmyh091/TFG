@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -39,8 +40,9 @@ fun AjustesPantalla(nav: NavHostController? = null) {
             modifier = Modifier.padding(bottom = 16.dp)
         ) {
             Image(
-                painter = painterResource(id = R.drawable.perfil),
+                painter = painterResource(id = R.drawable.usuario),
                 contentDescription = "Imagen perfil",
+                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
                 modifier = Modifier
                     .size(70.dp)
                     .clip(CircleShape)
@@ -62,7 +64,7 @@ fun AjustesPantalla(nav: NavHostController? = null) {
         }
 
         AjusteItem("Estadísticas", Icons.Default.Language) {
-            Toast.makeText(contexto, "Funcionalidad próximamente", Toast.LENGTH_SHORT).show()
+            nav?.navigate("estadisticas/${Util.obtenerDatoShared(contexto, "id")}")
         }
 
         AjusteItem("Notificaciones", Icons.Default.Notifications) {

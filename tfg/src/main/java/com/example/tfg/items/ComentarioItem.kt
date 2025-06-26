@@ -47,7 +47,7 @@ fun ComentarioItem(
         var (imagenR, textoR, usuarioR, fechaR, editar, borrar) = createRefs()
 
         Image(
-            painter = painterResource(id = R.drawable.perfil),
+            painter = painterResource(id = R.drawable.usuario),
             contentDescription = "Imagen",
             modifier = Modifier
                 .padding(16.dp, 16.dp, 10.dp, 13.dp)

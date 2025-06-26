@@ -65,15 +65,23 @@ fun ResultadoSubastaScreen(
         }
     }
 
+    val esAutor = obra?.autor == usuarioId
+    val esGanador = subasta?.idGanador == usuarioId
+    val subastaTerminada = subasta?.fechaLimite?.let { it < System.currentTimeMillis() } == true
+
+    // Añadir al carrito si es el ganador (con clave específica)
+    LaunchedEffect(esGanador, obra?.id_firebase) {
+        if (!esAutor && esGanador == true && obra != null) {
+            Log.d("CarritoManager", "Obra ganadora añadida al carrito: ${obra!!.id_firebase}")
+            CarritoManager.aniadirSubastaGanada(obra!!)
+        }
+    }
+
     if (cargando || obra == null || subasta == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
     } else {
-        val esAutor = obra!!.autor == usuarioId
-        val esGanador = subasta!!.idGanador == usuarioId
-        val subastaTerminada = subasta!!.fechaLimite < System.currentTimeMillis()
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -124,12 +132,7 @@ fun ResultadoSubastaScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             if (!esAutor) {
-                if (esGanador) {
-                    LaunchedEffect(Unit) {
-                        Log.d("CarritoManager", "Obra ganadora: ${obra!!.id_firebase}")
-                        CarritoManager.aniadirSubastaGanada(obra!!)
-                    }
-
+                if (esGanador == true) {
                     Text(
                         "¡Felicidades! Has ganado la subasta",
                         fontWeight = FontWeight.Bold,

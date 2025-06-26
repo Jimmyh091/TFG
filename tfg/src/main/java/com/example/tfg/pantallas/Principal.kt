@@ -59,10 +59,7 @@ import com.example.tfg.items.PublicacionItem
 import com.example.tfg.subastas.Subasta
 import com.google.firebase.database.FirebaseDatabase
 
-// Define the custom font family once
 val chango = FontFamily(Font(R.font.changoregular, FontWeight.Normal, FontStyle.Normal))
-
-// (imports intactos, los mantienes como están)
 
 @Composable
 fun PantallaPrincipal(nav: NavHostController? = null) {
@@ -89,7 +86,6 @@ fun PantallaPrincipal(nav: NavHostController? = null) {
                         .filter { it.fechaLimite < ahora && idsSubastasParticipadas.contains(it.idSubasta_firebase) }
                         .filterNot { it.idSubasta_firebase in Util.obtenerSubastasOcultadas(contexto) }
 
-
                     val resultado = mutableListOf<Pair<Subasta, Obra>>()
                     var pendientes = subastasFinalizadasFiltradas.size
 
@@ -115,7 +111,6 @@ fun PantallaPrincipal(nav: NavHostController? = null) {
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
         if (subastasFinalizadas.isNotEmpty()) {
             Spacer(Modifier.height(10.dp))
             Text("Subastas Finalizadas", fontSize = 18.sp, fontWeight = FontWeight.Bold)
@@ -154,7 +149,6 @@ fun PantallaPrincipal(nav: NavHostController? = null) {
                             }
                         }
 
-                        // Botón de cerrar
                         Text(
                             "❌",
                             modifier = Modifier
@@ -165,8 +159,7 @@ fun PantallaPrincipal(nav: NavHostController? = null) {
                                     subastasFinalizadas = subastasFinalizadas.filterNot {
                                         it.first.idSubasta_firebase == subasta.idSubasta_firebase
                                     }
-                                }
-                            ,
+                                },
                             fontSize = 18.sp,
                             color = Color.Red
                         )

@@ -34,6 +34,8 @@ import com.example.tfg.crudObra.Obra
 import com.example.tfg.subastas.Subasta
 import com.google.firebase.database.FirebaseDatabase
 
+// ... [todas las importaciones como ya las tienes]
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PublicacionInfoItem(
@@ -48,7 +50,8 @@ fun PublicacionInfoItem(
     var usuario by remember { mutableStateOf(Usuario()) }
     var subasta by remember { mutableStateOf<Subasta?>(null) }
 
-    var mostrarDialogReporte by remember { mutableStateOf<Boolean>(false) }
+    var mostrarDialogReporte by remember { mutableStateOf(false) }
+    var esFavorita by remember { mutableStateOf(false) }
 
     val usuarioId = Util.obtenerDatoShared(contexto, "id") ?: ""
 
@@ -63,6 +66,7 @@ fun PublicacionInfoItem(
 
                 Util.obtenerUsuario(dbRef, usuarioId) {
                     usuario = it ?: Usuario()
+                    esFavorita = usuario.obrasFavoritas.contains(obraKey)
                 }
 
                 Util.obtenerSubastas(dbRef) { todasSubastas ->
@@ -77,12 +81,9 @@ fun PublicacionInfoItem(
     val esAutorObra = obra?.autor == usuarioId
     val esComprador = usuario.obrasCompradas.contains(obraKey)
     val deshabilitado = esAutorObra || esComprador
-
     var mostrarComentarios by remember { mutableStateOf(false) }
 
-
     val esAdmin = Util.obtenerDatoSharedBoolean(contexto, "admin")
-
     val esSubasta = subasta != null
     val subastaTerminada by remember(subasta) {
         derivedStateOf { subasta?.fechaLimite?.let { it < System.currentTimeMillis() } ?: false }
@@ -144,7 +145,6 @@ fun PublicacionInfoItem(
                         }
                 )
 
-
                 Text(
                     Util.obtenerFecha(obra.fechaCreacion),
                     modifier = Modifier
@@ -177,8 +177,6 @@ fun PublicacionInfoItem(
 
                 Button(
                     onClick = {
-                        Log.d("CarritoManager", "Carrito bloqueo? ${CarritoManager.hayBloqueo()}")
-
                         if (CarritoManager.hayBloqueo()) {
                             Toast.makeText(contexto, "Debes pagar el carrito", Toast.LENGTH_SHORT).show()
                         } else if (esSubasta && subasta != null) {
@@ -190,6 +188,7 @@ fun PublicacionInfoItem(
                             }
                         } else if (!deshabilitado) {
                             CarritoManager.aniadir(obra)
+                            nav?.navigate("principal") // <-- redirige tras comprar
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
@@ -207,7 +206,6 @@ fun PublicacionInfoItem(
                     Text(textoBoton)
                 }
 
-                // Nuevas imágenes (iconos)
                 Row(
                     modifier = Modifier
                         .padding(8.dp)
@@ -217,27 +215,32 @@ fun PublicacionInfoItem(
                         }
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.favorito),
-                        contentDescription = "Icono 1",
+                        painter = painterResource(
+                            id = if (esFavorita) R.drawable.favoritosseleccionado else R.drawable.favorito
+                        ),
+                        contentDescription = "Favorito",
                         modifier = Modifier
                             .padding(5.dp)
                             .size(20.dp)
                             .clickable {
-                                Util.obtenerUsuario(dbRef, Util.obtenerDatoShared(contexto, "id")!!) { usAux ->
-                                    if (usAux != null) {
-                                        if (usAux.obrasFavoritas.contains(obraKey)) {
-                                            usAux.obrasFavoritas.remove(obraKey)
+                                Util.obtenerUsuario(dbRef, usuarioId) { usAux ->
+                                    usAux?.let {
+                                        if (it.obrasFavoritas.contains(obraKey)) {
+                                            it.obrasFavoritas.remove(obraKey)
+                                            esFavorita = false
                                         } else {
-                                            usAux.obrasFavoritas.add(obraKey)
+                                            it.obrasFavoritas.add(obraKey)
+                                            esFavorita = true
                                         }
-                                        Util.editarUsuario(dbRef, contexto, usAux)
+                                        Util.editarUsuario(dbRef, contexto, it)
                                     }
                                 }
                             }
                     )
+
                     Image(
                         painter = painterResource(id = R.drawable.comentarios),
-                        contentDescription = "Icono 2",
+                        contentDescription = "Comentarios",
                         modifier = Modifier
                             .padding(5.dp)
                             .size(20.dp)
@@ -249,7 +252,7 @@ fun PublicacionInfoItem(
                     if (esAdmin || esAutorObra) {
                         Image(
                             painter = painterResource(id = R.drawable.modificar),
-                            contentDescription = "Icono 3",
+                            contentDescription = "Modificar",
                             modifier = Modifier
                                 .padding(5.dp)
                                 .size(20.dp)
@@ -259,7 +262,7 @@ fun PublicacionInfoItem(
                         )
                         Image(
                             painter = painterResource(id = R.drawable.borrar),
-                            contentDescription = "Icono 4",
+                            contentDescription = "Borrar",
                             modifier = Modifier
                                 .padding(5.dp)
                                 .size(20.dp)
@@ -270,9 +273,10 @@ fun PublicacionInfoItem(
                                 }
                         )
                     }
+
                     Image(
                         painter = painterResource(id = R.drawable.publicar),
-                        contentDescription = "Icono 5",
+                        contentDescription = "Denunciar",
                         modifier = Modifier
                             .padding(5.dp)
                             .size(20.dp)
@@ -300,10 +304,10 @@ fun PublicacionInfoItem(
                     )
                 }
             }
-
         }
     }
 }
+
 
 @Composable
 fun ReportarObraDialog(
