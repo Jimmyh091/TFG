@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "40047700806",
+    "firebase_url": "https://tfg-bd-bbf3c-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "tfg-bd-bbf3c",
+    "storage_bucket": "tfg-bd-bbf3c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:40047700806:android:a708c6f5aca391d28e5347",
+        "android_client_info": {
+          "package_name": "com.example.tfg"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtXHLIOuy9SJwE7VpaXTRufyYYsNoDw4g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
