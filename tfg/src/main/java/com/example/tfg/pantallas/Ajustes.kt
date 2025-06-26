@@ -61,7 +61,7 @@ fun AjustesPantalla(nav: NavHostController? = null) {
             nav?.navigate("editarPerfil")
         }
 
-        AjusteItem("Cambiar idioma", Icons.Default.Language) {
+        AjusteItem("Estadísticas", Icons.Default.Language) {
             Toast.makeText(contexto, "Funcionalidad próximamente", Toast.LENGTH_SHORT).show()
         }
 

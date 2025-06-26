@@ -1,7 +1,7 @@
 package com.example.tfg.clases
 
 data class Amonestacion(
-    val id: String? = null,
+    var id: String? = null,
     val obraId: String = "",
     val autorId: String = "",
     val denuncianteId: String = "",

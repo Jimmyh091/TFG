@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.HorizontalAlign
 import androidx.navigation.NavHostController
 import com.example.tfg.R
 import com.example.tfg.clases.Usuario
@@ -130,7 +131,19 @@ fun PerfilUsuario(
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        if (usuarioId != Util.obtenerDatoShared(contexto, "id")) {
+            Image(
+                painter = painterResource(id = R.drawable.enviar),
+                contentDescription = "Mis obras",
+                modifier = Modifier
+                    .size(55.dp)
+                    .padding(8.dp)
+                    .align(Alignment.End)
+            )
+        }else{
+            Spacer(modifier = Modifier.height(55.dp))
+        }
+            Spacer(modifier = Modifier.height(24.dp))
 
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -199,7 +212,7 @@ fun PerfilUsuario(
                 )
 
                 LazyVerticalStaggeredGrid(
-                    columns = StaggeredGridCells.Fixed(3),
+                    columns = StaggeredGridCells.Fixed(2),
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 16.dp),

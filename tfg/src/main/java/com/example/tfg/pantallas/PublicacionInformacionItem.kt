@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -346,7 +347,7 @@ fun ReportarObraDialog(
                     label = { Text("Motivo") },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { expanded = true }
+                        .onFocusChanged { if (it.isFocused) expanded = true }
                 )
                 DropdownMenu(
                     expanded = expanded,

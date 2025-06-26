@@ -1,12 +1,8 @@
 package com.example.tfg.crudObra
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-
+import android.content.Context
 import android.net.Uri
-import android.util.Log
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,91 +18,111 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.tfg.Util
-import com.example.tfg.clases.Comentario
+import com.example.tfg.subastas.Subasta
 import com.google.firebase.database.FirebaseDatabase
+import java.time.Instant
+import java.time.ZoneId
 
-@Preview(showBackground = true)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ModificarObraScreen(
     nav: NavHostController? = null,
-    obraKey: String = "",
-    onCancelClick: () -> Unit = {},
-    onConfirmClick: (Obra) -> Unit = {}// Función para manejar la confirmación con los datos de la obra
+    obraId: String,
+    onCancelClick: () -> Unit = {}
 ) {
+    val contexto = LocalContext.current
+    val dbRef = FirebaseDatabase.getInstance().reference
+    val genres = listOf("Fantasía", "Ciencia Ficción", "Drama", "Comedia", "Terror", "Romance", "Aventura")
 
-    var id_firebase by remember { mutableStateOf("") }
-    var autor by remember { mutableStateOf("") }
+    var obra by remember { mutableStateOf<Obra?>(null) }
+    var subasta by remember { mutableStateOf<Subasta?>(null) }
+
+    var crearSubasta by remember { mutableStateOf(false) }
     var titulo by remember { mutableStateOf("") }
     var descripcion by remember { mutableStateOf("") }
-    var genero by remember { mutableStateOf("") }
-    var precio by remember { mutableFloatStateOf(0.0f) }
-    var id_comprador by remember { mutableStateOf("") }
-    var rutaImagen by remember { mutableStateOf("") }
-    var fechaCreacion by remember { mutableLongStateOf(0) }
     var selectedGenre by remember { mutableStateOf("") }
-    var expanded by remember { mutableStateOf(false) }
-    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
-    var comentarios by remember { mutableStateOf(mutableMapOf<String, Comentario>()) }
 
-    var db_ref = FirebaseDatabase.getInstance().reference
-    var contexto = LocalContext.current
+    val selectedImageUri = remember { mutableStateOf<Uri?>(null) } // imagen no editable aún
+    val expanded = remember { mutableStateOf(false) }
 
-    var obra by remember { mutableStateOf(Obra()) }
-    Log.v("obraKey", "a " + obraKey)
-    Util.Companion.obtenerObra(db_ref, contexto, obraKey) {
-        obra = it!!
+    LaunchedEffect(true) {
+        dbRef.child("obras").child(obraId).get().addOnSuccessListener { snap ->
+            val obraCargada = snap.getValue(Obra::class.java)
+            if (obraCargada != null) {
+                obra = obraCargada
+                titulo = obraCargada.titulo!!
+                descripcion = obraCargada.descripcion!!
+                selectedGenre = obraCargada.genero!!
 
-        id_firebase = obra.id_firebase!!
-        autor = obra.autor!!
-        titulo = obra.titulo!!
-        descripcion = obra.descripcion!!
-        genero = obra.genero!!
-        precio = obra.precio!!
-        id_comprador = obra.id_comprador!!
-        rutaImagen = obra.rutaImagen!!
-        fechaCreacion = obra.fechaCreacion
-        comentarios = obra.comentarios!!
+                // Buscar subasta asociada (si existe)
+                dbRef.child("subastas").orderByChild("obraId").equalTo(obraId)
+                    .get().addOnSuccessListener { subSnap ->
+                        subSnap.children.firstOrNull()?.getValue(Subasta::class.java)?.let {
+                            subasta = it
+                            crearSubasta = true
+                        }
+                    }
+            }
+        }
     }
 
-    val context = LocalContext.current
-    val genres = listOf("Fantasía", "Ciencia Ficción", "Drama", "Comedia", "Terror", "Romance", "Aventura") // Lista de géneros
+    if (obra == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
 
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        selectedImageUri = uri
+    val fecha = subasta?.fechaLimite?.let {
+        Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
+    }
+    val hora = subasta?.fechaLimite?.let {
+        Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalTime()
     }
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Modificar Obra") })
+            TopAppBar(
+                title = { Text("Editar Obra") },
+                actions = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(end = 8.dp)
+                    ) {
+                        Text("¿Subasta?", fontSize = 14.sp)
+                        Switch(
+                            checked = crearSubasta,
+                            onCheckedChange = { crearSubasta = it },
+                            enabled = subasta == null // solo se puede activar si no había subasta antes
+                        )
+                    }
+                }
+            )
         }
     ) { paddingValues ->
+
         Column(
             modifier = Modifier
                 .padding(paddingValues)
                 .padding(16.dp)
-                .verticalScroll(rememberScrollState()) // Para que se pueda desplazar si hay mucho contenido
+                .verticalScroll(rememberScrollState())
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp) // Espacio entre los elementos
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Campo de texto para el Título
             OutlinedTextField(
                 value = titulo,
                 onValueChange = { titulo = it },
-                label = { Text("Título") },
+                label = { Text("Título de la Obra") },
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Campo de texto para la Descripción
             OutlinedTextField(
                 value = descripcion,
                 onValueChange = { descripcion = it },
@@ -114,127 +130,101 @@ fun ModificarObraScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Spinner (Desplegable) para los Géneros
-            Box {
+            Box(modifier = Modifier.clickable { expanded.value = true }) {
                 OutlinedTextField(
                     value = selectedGenre,
-                    onValueChange = {}, // No permitimos editar el texto directamente
+                    onValueChange = {},
                     label = { Text("Género") },
-                    readOnly = true, // Hacemos que sea solo de lectura
+                    readOnly = true,
                     trailingIcon = {
                         Icon(
                             imageVector = Icons.Filled.ArrowDropDown,
                             contentDescription = "Desplegar géneros",
-                            Modifier.clickable { expanded = !expanded } // Al hacer clic, cambiamos el estado de expansión
+                            Modifier.clickable { expanded.value = !expanded.value }
                         )
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { expanded = true } // También al hacer clic en el campo
+                    modifier = Modifier.fillMaxWidth()
                 )
                 DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
+                    expanded = expanded.value,
+                    onDismissRequest = { expanded.value = false }
                 ) {
-                    genres.forEach { genre ->
+                    genres.forEach { genero ->
                         DropdownMenuItem(
-                            text = { Text(genre) },
+                            text = { Text(genero) },
                             onClick = {
-                                selectedGenre = genre
-                                expanded = false // Cerramos el desplegable al seleccionar
+                                selectedGenre = genero
+                                expanded.value = false
                             }
                         )
                     }
                 }
             }
 
-            // Espacio para la Imagen de la Obra
             Box(
                 modifier = Modifier
-                    .size(200.dp) // Tamaño del recuadro para la imagen
-                    .border(1.dp, Color.Gray) // Borde para visualizar el área
-                    .clickable { imagePickerLauncher.launch("image/*") }, // Al hacer clic, abrimos el selector de imágenes
+                    .size(200.dp)
+                    .border(1.dp, Color.Gray),
                 contentAlignment = Alignment.Center
             ) {
-                if (selectedImageUri != null) {
-                    Image(
-                        painter = rememberAsyncImagePainter(
-                            ImageRequest.Builder(context).data(selectedImageUri).build()
-                        ),
-                        contentDescription = "Imagen de la obra",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop // Para que la imagen se ajuste al recuadro
-                    )
-                } else {
-                    Text("Toca para seleccionar una imagen")
-                }
+                Image(
+                    painter = rememberAsyncImagePainter(
+                        ImageRequest.Builder(contexto)
+                            .data(obra!!.rutaImagen)
+                            .build()
+                    ),
+                    contentDescription = "Imagen de la obra",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
             }
 
-            // Campo de texto para el Precio
             OutlinedTextField(
-                value = precio.toString(),
-                onValueChange = { precio = it.toFloatOrNull() ?: 0.0f },
+                value = obra!!.precio.toString(),
+                onValueChange = {},
+                readOnly = true,
                 label = { Text("Precio") },
                 modifier = Modifier.fillMaxWidth()
             )
 
-            /*
-            // Campo de texto para el Tipo de Venta
-            OutlinedTextField(
-                value = tipoVenta,
-                onValueChange = { tipoVenta = it },
-                label = { Text("Tipo de Venta (Ej: Venta, Alquiler)") },
-                modifier = Modifier.fillMaxWidth()
-            )*/
+            if (crearSubasta) {
+                OutlinedTextField(
+                    value = fecha?.toString() ?: "",
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Fecha límite") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = hora?.toString() ?: "",
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Hora límite") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
 
-            // Botones de Cancelar y Confirmar
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly // Espacio equitativo entre los botones
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Button(colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF3479BF),
-                contentColor = Color.White          
-            ),onClick = onCancelClick) {
+                Button(onClick = onCancelClick) {
                     Text("Cancelar")
                 }
-                Button(colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF3479BF),
-                contentColor = Color.White          
-            ),onClick = {
-                    // Aquí puedes validar los datos antes de confirmar
-
-                    /*
-                    val id_firebase: String? = "ERROR",
-                    val autor: String? = "ERROR",
-                    val titulo: String? = "ERROR",
-                    val descripcion: String? = "ERROR",
-                    val genero: String? = "ERROR",
-                    val precio: Double? = -1.0,
-                    val id_comprador: Boolean = false,
-                    val tipoVenta: String? = "ERROR",
-                    val rutaImagen: String? = "ERROR",
-                    val comentarios: MutableMap<String, Comentario>? = mutableMapOf<String, Comentario>(),
-                    val fecha: String? = "ERROR"*/
-
-                    val obra = Obra(
-                        id_firebase = id_firebase,
-                        autor = autor,
-                        titulo = titulo,
-                        descripcion = descripcion,
-                        genero = selectedGenre,
-                        precio = precio,
-                        rutaImagen = selectedImageUri.toString(), // Pasamos la URI de la imagen
-                        id_comprador = id_comprador,
-                        fechaCreacion = fechaCreacion,
-                        comentarios = comentarios
-                    )
-
-                    Util.Companion.editarObra(db_ref, obra)
-                    nav!!.navigate("principal")
-                    //onConfirmClick(obra)
-                }) {
-                    Text("Confirmar")
+                Button(
+                    onClick = {
+                        val obraActualizada = obra!!.copy(
+                            titulo = titulo,
+                            descripcion = descripcion,
+                            genero = selectedGenre
+                        )
+                        Util.editarObra(dbRef, obraActualizada)
+                        Toast.makeText(contexto, "Obra actualizada", Toast.LENGTH_SHORT).show()
+                        nav?.popBackStack()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3479BF))
+                ) {
+                    Text("Guardar cambios", color = Color.White)
                 }
             }
         }

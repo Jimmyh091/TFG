@@ -2,6 +2,7 @@ package com.example.tfg.subastas
 
 import android.util.Log
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -18,8 +19,6 @@ fun DetalleSubastaScreen(
     subastaId: String,
     nav: NavHostController
 ) {
-    Log.d("DetalleSubastaScreen", "Subasta ID: $subastaId")
-
     val dbRef = FirebaseDatabase.getInstance().reference
     val contexto = LocalContext.current
 
@@ -31,7 +30,6 @@ fun DetalleSubastaScreen(
 
     val usuarioId = Util.obtenerDatoShared(contexto, "id") ?: return
 
-    // Cargar subasta, luego obra y pujas
     LaunchedEffect(subastaId) {
         Util.obtenerSubasta(dbRef, subastaId) { s ->
             subasta = s
@@ -44,11 +42,9 @@ fun DetalleSubastaScreen(
         }
     }
 
-    // Cierre automático de la subasta si se ha superado la fecha límite
     LaunchedEffect(subasta, pujas) {
         val s = subasta
         if (s != null && System.currentTimeMillis() > s.fechaLimite && !subastaCerrada) {
-            Log.d("Subasta", "Fecha límite superada. Cerrando automáticamente.")
             Util.cerrarSubasta(dbRef, s)
             subastaCerrada = true
             nav.navigate("resultadoSubasta/${s.idSubasta_firebase}")
@@ -56,9 +52,10 @@ fun DetalleSubastaScreen(
     }
 
     Column(
-        Modifier
+        modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)) {
+            .padding(16.dp)
+    ) {
         if (subasta == null || obra == null) {
             Text("Cargando subasta...")
             return@Column
@@ -67,11 +64,23 @@ fun DetalleSubastaScreen(
         val s = subasta!!
         val o = obra!!
 
-        Text(o.titulo ?: "Sin título", style = MaterialTheme.typography.titleLarge)
-        Text(o.descripcion ?: "")
-        Spacer(Modifier.height(8.dp))
+        // Obra destacada
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            elevation = CardDefaults.cardElevation(4.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(o.titulo ?: "Sin título", style = MaterialTheme.typography.titleLarge)
+                Spacer(Modifier.height(4.dp))
+                Text(o.descripcion ?: "", style = MaterialTheme.typography.bodyMedium)
+            }
+        }
 
-        // Campo para ingresar puja
+        Spacer(Modifier.height(20.dp))
+
+        Text("Introduce tu puja", style = MaterialTheme.typography.titleMedium)
+
         OutlinedTextField(
             value = nuevaPuja,
             onValueChange = { nuevaPuja = it },
@@ -93,24 +102,46 @@ fun DetalleSubastaScreen(
                     )
                 ) {
                     nuevaPuja = ""
-                    Util.obtenerPujas(dbRef, subastaId) { pujas = it } // recargar
+                    Util.obtenerPujas(dbRef, subastaId) { pujas = it }
                 }
             },
-            modifier = Modifier.padding(top = 8.dp)
+            modifier = Modifier
+                .padding(top = 12.dp)
+                .fillMaxWidth()
         ) {
             Text("Pujar")
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(24.dp))
 
-        Text("Pujas (más altas primero):", style = MaterialTheme.typography.titleMedium)
-        pujas.sortedByDescending { it.cantidad }.forEach { p ->
-            var us by remember { mutableStateOf<Usuario?>(null) }
-            LaunchedEffect(p.pujadorId) {
-                Util.obtenerUsuario(dbRef, p.pujadorId) { us = it }
-            }
-            if (us != null) {
-                Text("${us!!.nombre}: ${p.cantidad}€")
+        Divider()
+        Text("Historial de pujas", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 12.dp, bottom = 8.dp))
+
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            pujas.sortedByDescending { it.cantidad }.forEach { p ->
+                var us by remember { mutableStateOf<Usuario?>(null) }
+
+                LaunchedEffect(p.pujadorId) {
+                    Util.obtenerUsuario(dbRef, p.pujadorId) { us = it }
+                }
+
+                if (us != null) {
+                    Card(
+                        shape = RoundedCornerShape(8.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .padding(12.dp)
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(text = us!!.nombre, style = MaterialTheme.typography.bodyMedium)
+                            Text(text = "${p.cantidad}€", style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                }
             }
         }
     }

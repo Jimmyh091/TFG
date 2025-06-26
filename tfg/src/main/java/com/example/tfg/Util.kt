@@ -161,7 +161,7 @@ class Util {
             dbRef.child("usuarios").child(usuarioId).removeValue()
 
             // Eliminar obras creadas por el usuario
-            dbRef.child("obras").orderByChild("autor").equalTo(usuarioId)
+            dbRef.child("arte/obras").orderByChild("autor").equalTo(usuarioId)
                 .addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
                         val obras = snapshot.children.mapNotNull { it.key }
@@ -174,7 +174,7 @@ class Util {
                 })
 
             // Eliminar subastas creadas por el usuario
-            dbRef.child("subastas").orderByChild("autorId").equalTo(usuarioId)
+            dbRef.child("arte/subastas").orderByChild("autorId").equalTo(usuarioId)
                 .addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
                         val subastas = snapshot.children.mapNotNull { it.key }
@@ -198,7 +198,7 @@ class Util {
                 })
 
             // Eliminar comentarios hechos por el usuario en cualquier obra
-            dbRef.child("obras").addListenerForSingleValueEvent(object : ValueEventListener {
+            dbRef.child("arte/obras").addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(obrasSnapshot: DataSnapshot) {
                     for (obraSnap in obrasSnapshot.children) {
                         val comentariosSnap = obraSnap.child("comentarios")
@@ -287,10 +287,10 @@ class Util {
         }
 
         fun eliminarSubastaCompleto(dbRef: DatabaseReference, subastaId: String, onComplete: () -> Unit = {}) {
-            dbRef.child("subastas").child(subastaId).get().addOnSuccessListener { snapshot ->
+            dbRef.child("arte/subastas").child(subastaId).get().addOnSuccessListener { snapshot ->
                 val idObra = snapshot.child("idObra_firebase").value as? String
-                dbRef.child("subastas").child(subastaId).removeValue()
-                dbRef.child("pujas").orderByChild("idSubasta").equalTo(subastaId)
+                dbRef.child("arte/subastas").child(subastaId).removeValue()
+                dbRef.child("arte/pujas").orderByChild("idSubasta").equalTo(subastaId)
                     .addListenerForSingleValueEvent(object : ValueEventListener {
                         override fun onDataChange(pujaSnap: DataSnapshot) {
                             pujaSnap.children.forEach { it.ref.removeValue() }
@@ -417,6 +417,7 @@ class Util {
                         snapshot.children.forEach {
                             val am = it.getValue(Amonestacion::class.java)
                             if (am != null) {
+                                am.id = it.key  // <<<<<< NECESARIO PARA ELIMINARLA DESPUÉS
                                 lista.add(am)
                             }
                         }
@@ -428,6 +429,7 @@ class Util {
                     }
                 })
         }
+
 
 
         // ---------------- FECHA / TIEMPO ----------------

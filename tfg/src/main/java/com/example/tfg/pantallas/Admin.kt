@@ -53,8 +53,6 @@ fun Admin(nav: NavHostController) {
     }
 }
 
-// Fragmento completo con iconos de acción para cada sección
-
 @Composable
 fun ListaUsuarios(nav: NavHostController, dbRef: DatabaseReference, contexto: Context) {
     val usuarios = remember { mutableStateListOf<Usuario>() }
@@ -88,9 +86,10 @@ fun ListaUsuarios(nav: NavHostController, dbRef: DatabaseReference, contexto: Co
                     }
 
                     IconButton(onClick = {
-                        dbRef.child("usuarios").child(usuario.id_firebase).removeValue()
-                        Toast.makeText(contexto, "Usuario eliminado", Toast.LENGTH_SHORT).show()
-                        usuarios.remove(usuario)
+                        Util.eliminarUsuarioCompleto(dbRef, usuario.id_firebase) {
+                            Toast.makeText(contexto, "Usuario eliminado", Toast.LENGTH_SHORT).show()
+                            usuarios.remove(usuario)
+                        }
                     }) {
                         Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color.Red)
                     }
@@ -114,6 +113,14 @@ fun ListaObras(nav: NavHostController, dbRef: DatabaseReference, contexto: Conte
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         items(obras) { obra ->
+            var nombreAutor by remember { mutableStateOf("") }
+
+            LaunchedEffect(obra.autor) {
+                Util.obtenerUsuario(dbRef, obra.autor!!) { usuario ->
+                    nombreAutor = usuario?.nombre ?: obra.autor
+                }
+            }
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -132,17 +139,18 @@ fun ListaObras(nav: NavHostController, dbRef: DatabaseReference, contexto: Conte
                         }
                     }) {
                         Text(text = "Título: ${obra.titulo}")
-                        Text(text = "Autor: ${obra.autor}")
+                        Text(text = "Autor: $nombreAutor")
                     }
 
                     Row {
-                        IconButton(onClick = { nav.navigate("editarObra/${obra.id_firebase}") }) {
+                        IconButton(onClick = { nav.navigate("modificarObra/${obra.id_firebase}") }) {
                             Icon(Icons.Default.Edit, contentDescription = "Editar")
                         }
                         IconButton(onClick = {
-                            dbRef.child("obras").child(obra.id_firebase!!).removeValue()
-                            Toast.makeText(contexto, "Obra eliminada", Toast.LENGTH_SHORT).show()
-                            obras.remove(obra)
+                            Util.eliminarObraCompleto(dbRef, obra.id_firebase!!) {
+                                Toast.makeText(contexto, "Obra eliminada", Toast.LENGTH_SHORT).show()
+                                obras.remove(obra)
+                            }
                         }) {
                             Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color.Red)
                         }
@@ -164,6 +172,7 @@ fun ListaObras(nav: NavHostController, dbRef: DatabaseReference, contexto: Conte
 @Composable
 fun ListaSubastas(nav: NavHostController, dbRef: DatabaseReference, contexto: Context) {
     val subastas = remember { mutableStateListOf<Subasta>() }
+    var obraSeleccionada by remember { mutableStateOf<Obra?>(null) }
 
     LaunchedEffect(Unit) {
         Util.obtenerSubastas(dbRef) { lista ->
@@ -172,14 +181,9 @@ fun ListaSubastas(nav: NavHostController, dbRef: DatabaseReference, contexto: Co
         }
     }
 
-    var obraSeleccionada by remember { mutableStateOf<Obra?>(null) }
-
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-
-
         items(subastas) { subasta ->
             var obra by remember { mutableStateOf<Obra?>(null) }
-
 
             LaunchedEffect(subasta.idObra_firebase) {
                 Util.obtenerObra(dbRef, contexto, subasta.idObra_firebase!!) { result ->
@@ -209,14 +213,15 @@ fun ListaSubastas(nav: NavHostController, dbRef: DatabaseReference, contexto: Co
 
                         Row {
                             IconButton(onClick = {
-                                nav.navigate("editarSubasta/${subasta.idObra_firebase}")
+                                nav.navigate("modificarObra/${subasta.idObra_firebase}")
                             }) {
                                 Icon(Icons.Default.Edit, contentDescription = "Editar")
                             }
                             IconButton(onClick = {
-                                dbRef.child("subastas").child(subasta.idObra_firebase!!).removeValue()
-                                Toast.makeText(contexto, "Subasta eliminada", Toast.LENGTH_SHORT).show()
-                                subastas.remove(subasta)
+                                Util.eliminarSubastaCompleto(dbRef, subasta.idSubasta_firebase!!) {
+                                    Toast.makeText(contexto, "Subasta eliminada", Toast.LENGTH_SHORT).show()
+                                    subastas.remove(subasta)
+                                }
                             }) {
                                 Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color.Red)
                             }
@@ -226,7 +231,6 @@ fun ListaSubastas(nav: NavHostController, dbRef: DatabaseReference, contexto: Co
             }
         }
     }
-
 
     obraSeleccionada?.let {
         Dialog(onDismissRequest = { obraSeleccionada = null }) {
@@ -251,31 +255,58 @@ fun ListaAmonestaciones(nav: NavHostController, dbRef: DatabaseReference, contex
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         items(amonestaciones) { amonestacion ->
+            var tituloObra by remember { mutableStateOf("") }
+
+            LaunchedEffect(amonestacion.obraId) {
+                Util.obtenerObra(dbRef, contexto, amonestacion.obraId) {
+                    tituloObra = it?.titulo ?: "Obra no encontrada"
+                }
+            }
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp),
+                    .padding(8.dp)
+                    .clickable {
+                        Util.obtenerObra(dbRef, contexto, amonestacion.obraId) { obra ->
+                            if (obra != null) {
+                                obraSeleccionada = obra
+                            } else {
+                                Toast.makeText(contexto, "No se encontró la obra", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    },
                 elevation = CardDefaults.cardElevation(4.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(text = "Obra denunciada: ${amonestacion.obraId}")
+                    Text(text = "Obra denunciada: $tituloObra")
                     Text(text = "Motivo: ${amonestacion.motivo}")
-                    Text(text = "Fecha: ${amonestacion.fecha}")
+                    Text(text = "Fecha: ${Util.obtenerFecha(amonestacion.fecha)}")
 
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        Button(onClick = {
-                            dbRef.child("amonestaciones").child(amonestacion.id!!).removeValue()
-                            Toast.makeText(contexto, "Amonestación aceptada", Toast.LENGTH_SHORT).show()
-                            amonestaciones.remove(amonestacion)
-                        }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))) {
+                        Button(
+                            onClick = {
+                                amonestacion.id?.let { id ->
+                                    dbRef.child("amonestaciones").child(id).removeValue()
+                                    Toast.makeText(contexto, "Amonestación aceptada", Toast.LENGTH_SHORT).show()
+                                    amonestaciones.remove(amonestacion)
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                        ) {
                             Text("Aceptar")
                         }
                         Spacer(modifier = Modifier.width(8.dp))
-                        Button(onClick = {
-                            dbRef.child("amonestaciones").child(amonestacion.id!!).removeValue()
-                            Toast.makeText(contexto, "Amonestación rechazada", Toast.LENGTH_SHORT).show()
-                            amonestaciones.remove(amonestacion)
-                        }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF44336))) {
+                        Button(
+                            onClick = {
+                                amonestacion.id?.let { id ->
+                                    dbRef.child("amonestaciones").child(id).removeValue()
+                                    Toast.makeText(contexto, "Amonestación rechazada", Toast.LENGTH_SHORT).show()
+                                    amonestaciones.remove(amonestacion)
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF44336))
+                        ) {
                             Text("Rechazar")
                         }
                     }
