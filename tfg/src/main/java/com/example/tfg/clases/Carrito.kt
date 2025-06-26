@@ -1,5 +1,6 @@
 package com.example.tfg.clases
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import com.example.tfg.crudObra.Obra
 

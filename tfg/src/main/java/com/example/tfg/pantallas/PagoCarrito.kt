@@ -95,8 +95,8 @@ fun PantallaPagoCarrito(nav: NavHostController) {
                     contentColor = Color.White
                 ),
                 onClick = {
-                    if (usuario.dinero!! >= precioTotal) {
-                        usuario.dinero = usuario.dinero!! - precioTotal
+                    if (usuario.dinero >= precioTotal) {
+                        usuario.dinero = usuario.dinero - precioTotal
                         val nuevasCompras = usuario.obrasCompradas.toMutableList()
                         nuevasCompras.addAll(CarritoManager.obrasEnCarrito)
                         usuario.obrasCompradas = nuevasCompras.distinct().toMutableList()
@@ -107,7 +107,7 @@ fun PantallaPagoCarrito(nav: NavHostController) {
                         Toast.makeText(contexto, "Pago realizado con éxito", Toast.LENGTH_SHORT).show()
                         nav.navigate("principal")
                     } else {
-                        dineroFaltante = precioTotal - usuario.dinero!!
+                        dineroFaltante = precioTotal - usuario.dinero
                     }
                 }
             ) {

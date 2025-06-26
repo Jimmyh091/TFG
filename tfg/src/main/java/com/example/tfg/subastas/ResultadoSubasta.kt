@@ -32,6 +32,7 @@ fun ResultadoSubastaScreen(
     var obra by remember { mutableStateOf<Obra?>(null) }
     var pujasOrdenadas by remember { mutableStateOf<List<Puja>>(emptyList()) }
     var ganador by remember { mutableStateOf<Usuario?>(null) }
+    var mapaNombres by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var cargando by remember { mutableStateOf(true) }
 
     val usuarioId = Util.obtenerDatoShared(contexto, "id")
@@ -52,6 +53,21 @@ fun ResultadoSubastaScreen(
                     val ordenadas = pujas.sortedByDescending { it.cantidad }
                     pujasOrdenadas = ordenadas
 
+                    // Obtener los nombres de los pujadores
+                    val idsUnicos = ordenadas.map { it.pujadorId }.distinct()
+                    val mapaTemp = mutableMapOf<String, String>()
+
+                    var pendientes = idsUnicos.size
+                    idsUnicos.forEach { id ->
+                        Util.obtenerUsuario(dbRef, id) { usuario ->
+                            mapaTemp[id] = usuario?.nombre ?: "Usuario desconocido"
+                            pendientes--
+                            if (pendientes == 0) {
+                                mapaNombres = mapaTemp
+                            }
+                        }
+                    }
+
                     if (s.fechaLimite < System.currentTimeMillis() && ordenadas.isNotEmpty()) {
                         val idGanador = ordenadas.first().pujadorId
                         Util.obtenerUsuario(dbRef, idGanador) {
@@ -69,7 +85,7 @@ fun ResultadoSubastaScreen(
     val esGanador = subasta?.idGanador == usuarioId
     val subastaTerminada = subasta?.fechaLimite?.let { it < System.currentTimeMillis() } == true
 
-    // Añadir al carrito si es el ganador (con clave específica)
+    // Añadir al carrito si es el ganador
     LaunchedEffect(esGanador, obra?.id_firebase) {
         if (!esAutor && esGanador == true && obra != null) {
             Log.d("CarritoManager", "Obra ganadora añadida al carrito: ${obra!!.id_firebase}")
@@ -109,12 +125,14 @@ fun ResultadoSubastaScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text("Pujas realizadas", fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
+
             if (pujasOrdenadas.isEmpty()) {
                 Text("No hubo pujas.", fontSize = 14.sp)
             } else {
                 pujasOrdenadas.forEachIndexed { index, puja ->
+                    val nombre = mapaNombres[puja.pujadorId] ?: puja.pujadorId.take(6)
                     Text(
-                        "${index + 1}. Usuario: ${puja.pujadorId.take(8)}... - ${puja.cantidad}€",
+                        "${index + 1}. $nombre - ${puja.cantidad}€",
                         fontSize = 14.sp
                     )
                 }

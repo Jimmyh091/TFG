@@ -206,7 +206,7 @@ fun TopBarConCarrito(nav: NavController) {
                     modifier = Modifier.padding(end = 8.dp)
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.publicar),
+                        painter = painterResource(id = R.drawable.carrito),
                         contentDescription = "Carrito",
                         modifier = Modifier.size(34.dp)
                     )
