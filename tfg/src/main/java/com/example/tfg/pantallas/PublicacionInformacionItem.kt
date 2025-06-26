@@ -187,7 +187,7 @@ fun PublicacionInfoItem(
                             modifier = Modifier.padding(5.dp).size(20.dp).clickable { nav?.navigate("modificarObra/${obraKey}") })
                         Image(painter = painterResource(id = R.drawable.borrar), contentDescription = "Borrar",
                             modifier = Modifier.padding(5.dp).size(20.dp).clickable {
-                                Util.eliminarObra(dbRef, obraKey) {
+                                Util.eliminarObraCompleto(dbRef, obraKey) {
                                     nav?.navigate("principal")
                                 }
                             })
