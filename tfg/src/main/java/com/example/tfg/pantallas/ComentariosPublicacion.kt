@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -35,84 +36,76 @@ import com.example.tfg.Util
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 
-
-@Preview(showBackground = true)
 @Composable
-fun ComentariosPublicacion (
+fun ComentariosPublicacion(
     obraKey: String = "error",
     comentarios: MutableMap<String, Comentario> = mutableMapOf()
-){
-
-    Log.d("comentarios", comentarios.values.toString())
-
+) {
     val db_ref = FirebaseDatabase.getInstance().reference
     val contexto = LocalContext.current
 
-    val comentariosObservables = remember { mutableStateListOf<Comentario>().apply { addAll(comentarios.values) } }
+    val comentariosObservables = remember {
+        mutableStateListOf<Comentario>().apply {
+            addAll(comentarios.values.sortedByDescending { it.fechaCreacion })
+        }
+    }
     var texto by remember { mutableStateOf("") }
 
-    Column {
+    Column(modifier = Modifier.padding(16.dp)) {
 
+        // Campo de escritura de comentario
         ConstraintLayout(
             modifier = Modifier
-                .fillMaxWidth() // Ocupa t0do el ancho disponible
-                .padding(16.dp) // Espacio alrededor del ConstraintLayout
+                .fillMaxWidth()
         ) {
-            val (textFieldRef, sendImageRef) = createRefs() // Referencias para los elementos
+            val (textFieldRef, sendImageRef) = createRefs()
 
             TextField(
-                value = texto, // Usar la variable de estado
-                onValueChange = { texto = it }, // Actualizar la variable de estado
-                label = { }, // Puedes poner un Label si quieres
+                value = texto,
+                onValueChange = { texto = it },
+                placeholder = { Text("Escribe un comentario...") },
                 modifier = Modifier
-                    // .background(Color.LightGray) // Opcional: fondo para visualizar el área
                     .constrainAs(textFieldRef) {
                         top.linkTo(parent.top)
-                        bottom.linkTo(parent.bottom)
                         start.linkTo(parent.start)
-                        end.linkTo(sendImageRef.start, margin = 8.dp) // Espacio entre TextField e Image
-                        width = Dimension.fillToConstraints // El ancho se ajusta a las restricciones
-                        height = Dimension.wrapContent // La altura se ajusta al contenido del TextField
-                    },
+                        end.linkTo(sendImageRef.start, margin = 8.dp)
+                        width = Dimension.fillToConstraints
+                    }
             )
 
             Image(
-                painter = painterResource(id = R.drawable.enviar), // Reemplaza R.drawable.home con tu recurso
-                contentDescription = "Enviar", // Descripción para accesibilidad
-                contentScale = ContentScale.Crop, // Para que la imagen se ajuste al tamaño de la imagen
+                painter = painterResource(id = R.drawable.enviar),
+                contentDescription = "Enviar",
+                contentScale = ContentScale.Fit,
                 modifier = Modifier
-                    .width(40.dp) // Ancho fijo
+                    .width(40.dp)
                     .constrainAs(sendImageRef) {
-                        top.linkTo(textFieldRef.top) // Alinear la parte superior con el TextField
-                        bottom.linkTo(textFieldRef.bottom) // Alinear la parte inferior con el TextField
+                        top.linkTo(textFieldRef.top)
+                        bottom.linkTo(textFieldRef.bottom)
                         end.linkTo(parent.end)
                     }
                     .clickable {
                         enviarMensaje(db_ref, contexto, comentariosObservables, obraKey, texto)
-                        Toast.makeText(contexto, "Mensaje enviado", Toast.LENGTH_SHORT).show()
                         texto = ""
                     }
             )
         }
 
+        Spacer(modifier = Modifier.padding(top = 12.dp))
+
+        // Lista de comentarios
         LazyColumn(
-            modifier = Modifier,
-            verticalArrangement = Arrangement.spacedBy(5.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth()
         ) {
             items(
                 items = comentariosObservables,
-                key = { comentario -> comentario.id }
+                key = { it.id }
             ) { comentario ->
                 ComentarioItem(
                     obraKey = obraKey,
                     comentario = comentario
                 )
-            }
-
-            items(comentariosObservables.size){
-
-                Spacer(modifier = Modifier.padding(5.dp))
-
             }
         }
     }

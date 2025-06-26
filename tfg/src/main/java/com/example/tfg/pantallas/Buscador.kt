@@ -120,12 +120,7 @@ fun Buscador(nav: NavHostController) {
                 modifier = Modifier.weight(1f)
             )
         }
-        Spacer(Modifier.height(8.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Mostrar vendidos/subastados")
-            Spacer(Modifier.width(8.dp))
-            Switch(checked = mostrarVendidos, onCheckedChange = { mostrarVendidos = it })
-        }
+
         Spacer(Modifier.height(16.dp))
 
         if (seleccionado != null) {

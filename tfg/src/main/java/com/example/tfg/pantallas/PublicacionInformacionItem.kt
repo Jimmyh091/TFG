@@ -106,15 +106,15 @@ fun PublicacionInfoItem(
                 contentScale = ContentScale.Crop
             )
 
-            ConstraintLayout(modifier = Modifier.fillMaxWidth()) {
-                val (titulo, autor, descripcion, fecha, boton, comentarios, iconos) = createRefs()
+            ConstraintLayout(modifier = Modifier.fillMaxWidth().height(150.dp)) {
+                val (titulo, autor, descripcion, fecha, boton, fechaCierre, iconos) = createRefs()
 
                 Text(
                     obra.titulo ?: "Sin título",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
-                        .padding(13.dp)
+                        .padding(start = 13.dp, top = 13.dp)
                         .constrainAs(titulo) {
                             top.linkTo(parent.top)
                             start.linkTo(parent.start)
@@ -144,6 +144,7 @@ fun PublicacionInfoItem(
                         }
                 )
 
+
                 Text(
                     Util.obtenerFecha(obra.fechaCreacion),
                     modifier = Modifier
@@ -167,9 +168,9 @@ fun PublicacionInfoItem(
                         color = Color.Red,
                         modifier = Modifier
                             .padding(horizontal = 13.dp)
-                            .constrainAs(comentarios) {
-                                top.linkTo(descripcion.bottom)
-                                start.linkTo(parent.start)
+                            .constrainAs(fechaCierre) {
+                                top.linkTo(fecha.bottom)
+                                end.linkTo(parent.end)
                             }
                     )
                 }
@@ -199,7 +200,7 @@ fun PublicacionInfoItem(
                     modifier = Modifier
                         .padding(8.dp)
                         .constrainAs(boton) {
-                            top.linkTo(comentarios.bottom)
+                            bottom.linkTo(parent.bottom)
                             end.linkTo(parent.end)
                         }
                 ) {
@@ -211,8 +212,7 @@ fun PublicacionInfoItem(
                     modifier = Modifier
                         .padding(8.dp)
                         .constrainAs(iconos) {
-                            top.linkTo(comentarios.bottom)
-                            end.linkTo(boton.start)
+                            start.linkTo(parent.start)
                             bottom.linkTo(parent.bottom)
                         }
                 ) {
@@ -300,7 +300,6 @@ fun PublicacionInfoItem(
                     )
                 }
             }
-
 
         }
     }

@@ -66,10 +66,10 @@ class Util {
 
         fun eliminarObraCompleto(dbRef: DatabaseReference, obraId: String, onComplete: () -> Unit = {}) {
             // Eliminar la obra
-            dbRef.child("obras").child(obraId).removeValue()
+            dbRef.child("arte/obras").child(obraId).removeValue()
 
             // Eliminar subasta si existe
-            dbRef.child("subastas").orderByChild("idObra_firebase").equalTo(obraId)
+            dbRef.child("arte/subastas").orderByChild("idObra_firebase").equalTo(obraId)
                 .addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
                         snapshot.children.forEach { it.ref.removeValue() }
@@ -160,6 +160,33 @@ class Util {
             // Eliminar el propio usuario
             dbRef.child("usuarios").child(usuarioId).removeValue()
 
+            // Eliminar subastas cuyas obras son del usuario
+            dbRef.child("arte/subastas")
+                .addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        snapshot.children.forEach { subastaSnapshot ->
+                            val subastaId = subastaSnapshot.key ?: return@forEach
+                            val idObra = subastaSnapshot.child("idObra_firebase").getValue(String::class.java)
+
+                            if (idObra != null) {
+                                dbRef.child("arte/obras").child(idObra)
+                                    .addListenerForSingleValueEvent(object : ValueEventListener {
+                                        override fun onDataChange(obraSnapshot: DataSnapshot) {
+                                            val autorObra = obraSnapshot.child("autor").getValue(String::class.java)
+                                            if (autorObra == usuarioId) {
+                                                eliminarSubastaCompleto(dbRef, subastaId)
+                                            }
+                                        }
+
+                                        override fun onCancelled(error: DatabaseError) {}
+                                    })
+                            }
+                        }
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {}
+                })
+
             // Eliminar obras creadas por el usuario
             dbRef.child("arte/obras").orderByChild("autor").equalTo(usuarioId)
                 .addListenerForSingleValueEvent(object : ValueEventListener {
@@ -173,18 +200,6 @@ class Util {
                     override fun onCancelled(error: DatabaseError) {}
                 })
 
-            // Eliminar subastas creadas por el usuario
-            dbRef.child("arte/subastas").orderByChild("autorId").equalTo(usuarioId)
-                .addListenerForSingleValueEvent(object : ValueEventListener {
-                    override fun onDataChange(snapshot: DataSnapshot) {
-                        val subastas = snapshot.children.mapNotNull { it.key }
-                        subastas.forEach { subastaId ->
-                            eliminarSubastaCompleto(dbRef, subastaId)
-                        }
-                    }
-
-                    override fun onCancelled(error: DatabaseError) {}
-                })
 
             // Eliminar amonestaciones realizadas por el usuario
             dbRef.child("amonestaciones").orderByChild("denuncianteId").equalTo(usuarioId)
@@ -203,7 +218,7 @@ class Util {
                     for (obraSnap in obrasSnapshot.children) {
                         val comentariosSnap = obraSnap.child("comentarios")
                         for (comentarioSnap in comentariosSnap.children) {
-                            val autorId = comentarioSnap.child("autorId").getValue(String::class.java)
+                            val autorId = comentarioSnap.child("autor").getValue(String::class.java)
                             if (autorId == usuarioId) {
                                 comentarioSnap.ref.removeValue()
                             }
@@ -213,6 +228,7 @@ class Util {
 
                 override fun onCancelled(error: DatabaseError) {}
             })
+
         }
 
         // ---------------- COMENTARIOS ----------------
@@ -288,7 +304,10 @@ class Util {
 
         fun eliminarSubastaCompleto(dbRef: DatabaseReference, subastaId: String, onComplete: () -> Unit = {}) {
             dbRef.child("arte/subastas").child(subastaId).get().addOnSuccessListener { snapshot ->
+                Log.d("eliminarSubastaCompleto", "snapshot: $snapshot")
                 val idObra = snapshot.child("idObra_firebase").value as? String
+                Log.d("eliminarSubastaCompleto", "idObra: $idObra")
+
                 dbRef.child("arte/subastas").child(subastaId).removeValue()
                 dbRef.child("arte/pujas").orderByChild("idSubasta").equalTo(subastaId)
                     .addListenerForSingleValueEvent(object : ValueEventListener {

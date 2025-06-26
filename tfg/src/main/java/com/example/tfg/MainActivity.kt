@@ -9,22 +9,34 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
@@ -166,19 +178,65 @@ fun MainScreen() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBarConCarrito(nav: NavController, titulo: String = "") {
-    TopAppBar(
-        title = { Text(titulo) },
-        actions = {
-            IconButton(onClick = { nav.navigate("carrito") }) {
-                Icon(
-                    painter = painterResource(id = R.drawable.publicar),
-                    contentDescription = "Carrito"
-                )
-            }
+fun TopBarConCarrito(nav: NavController) {
+    val contexto = LocalContext.current
+    val esAdmin = Util.obtenerDatoSharedBoolean(contexto, "admin")
+
+    Box(modifier = Modifier.fillMaxWidth()) {
+        TopAppBar(
+            title = { },
+            navigationIcon = {
+                if (esAdmin) {
+                    Button(
+                        onClick = { nav.navigate("admin") },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF3479BF),
+                            contentColor = Color.White
+                        ),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                        modifier = Modifier.padding(start = 8.dp)
+                    ) {
+                        Text("Admin")
+                    }
+                }
+            },
+            actions = {
+                IconButton(
+                    onClick = { nav.navigate("carrito") },
+                    modifier = Modifier.padding(end = 8.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.publicar),
+                        contentDescription = "Carrito",
+                        modifier = Modifier.size(34.dp)
+                    )
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        // Texto centrado horizontalmente y ligeramente más abajo (p.ej. centrado a altura de iconos)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 35.dp), // AJUSTA ESTE VALOR PARA BAJARLO MÁS SI QUIERES
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                buildAnnotatedString {
+                    withStyle(style = SpanStyle(color = Color(0xFF52BF34))) { append("art") }
+                    withStyle(style = SpanStyle(color = Color(0xFF3479BF))) { append("arte") }
+                },
+                style = MaterialTheme.typography.headlineMedium,
+                fontFamily = chango,
+                modifier = Modifier.clickable { nav.navigate("principal") }
+            )
         }
-    )
+    }
 }
+
+
+
 
 
 @Composable

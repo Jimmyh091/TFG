@@ -115,33 +115,6 @@ fun PantallaPrincipal(nav: NavHostController? = null) {
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if (Util.obtenerDatoSharedBoolean(contexto, "admin")) {
-            Button(
-                onClick = { nav?.navigate("admin") },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF3479BF),
-                    contentColor = Color.White
-                )
-            ) {
-                Text("Admin")
-            }
-        }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Text(
-                buildAnnotatedString {
-                    withStyle(style = SpanStyle(color = Color(0xFF52BF34))) { append("art") }
-                    withStyle(style = SpanStyle(color = Color(0xFF3479BF))) { append("arte") }
-                },
-                style = MaterialTheme.typography.headlineMedium,
-                fontFamily = chango
-            )
-        }
 
         if (subastasFinalizadas.isNotEmpty()) {
             Spacer(Modifier.height(10.dp))

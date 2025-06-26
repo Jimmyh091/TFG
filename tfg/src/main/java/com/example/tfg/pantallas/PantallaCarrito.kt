@@ -1,17 +1,11 @@
 package com.example.tfg.pantallas
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -27,47 +21,90 @@ import com.google.firebase.database.FirebaseDatabase
 fun CarritoScreen(nav: NavHostController) {
     val contexto = LocalContext.current
     val dbRef = FirebaseDatabase.getInstance().reference
-    val listaObras = remember { mutableStateListOf<Obra>() }
+    val listaObras = remember { mutableStateListOf<Pair<Obra, String>>() }
 
-    // Refrescar las obras cuando cambia el carrito
+    // Recarga las obras cada vez que el carrito cambia
     LaunchedEffect(CarritoManager.obrasEnCarrito) {
         listaObras.clear()
         CarritoManager.obrasEnCarrito.forEach { id ->
             Util.obtenerObra(dbRef, contexto, id) { obra ->
                 obra?.let {
-                    if (!listaObras.any { it.id_firebase == obra.id_firebase }) {
-                        listaObras.add(it)
+                    Util.obtenerUsuario(dbRef, it.autor ?: "") { usuario ->
+                        val nombreAutor = usuario?.nombre ?: "Desconocido"
+                        if (!listaObras.any { par -> par.first.id_firebase == obra.id_firebase }) {
+                            listaObras.add(obra to nombreAutor)
+                        }
                     }
                 }
             }
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Carrito", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Carrito",
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
 
-        LazyColumn {
-            items(listaObras.size) { index ->
-                val obra = listaObras[index]
-                Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                    Text("${obra.titulo} - ${obra.autor} - ${obra.precio}€")
-                    Button(onClick = {
-                        CarritoManager.borrar(obra.id_firebase!!)
-                        listaObras.remove(obra)
-                    }) {
-                        Text("Eliminar")
+        if (listaObras.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("El carrito está vacío", fontSize = 16.sp)
+            }
+        } else {
+            LazyColumn(modifier = Modifier.weight(1f)) {
+                items(listaObras) { (obra, nombreAutor) ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp),
+                        elevation = CardDefaults.cardElevation(4.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                text = obra.titulo ?: "Sin título",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text("Autor: $nombreAutor", fontSize = 14.sp)
+                            Text("Precio: ${obra.precio}€", fontSize = 14.sp)
+
+                            Button(
+                                onClick = {
+                                    CarritoManager.borrar(obra.id_firebase!!)
+                                    listaObras.removeIf { it.first.id_firebase == obra.id_firebase }
+                                },
+                                modifier = Modifier
+                                    .padding(top = 8.dp)
+                                    .align(Alignment.End),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.error,
+                                    contentColor = MaterialTheme.colorScheme.onError
+                                )
+                            ) {
+                                Text("Eliminar")
+                            }
+                        }
                     }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        Button(onClick = {
-            nav.navigate("pagoCarrito")
-        }) {
-            Text("Comprar todo")
+            Button(
+                onClick = { nav.navigate("pagoCarrito") },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text("Comprar todo")
+            }
         }
     }
 }
-
